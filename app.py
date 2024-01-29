@@ -4,7 +4,7 @@ import numpy as np
 from tensorflow.keras.preprocessing import image
 from PIL import Image
 import cv2
-from flask import Flask, request, render_template
+from flask import Flask, request, render_template , jsonify
 from werkzeug.utils import secure_filename
 from tensorflow.keras.preprocessing.image import load_img, img_to_array
 
@@ -36,6 +36,29 @@ def getResult(image_path):
 @app.route('/', methods=['GET'])
 def index():
     return render_template('index.html')
+
+
+
+
+@app.route('/predictApi', methods=["POST"])
+def api():
+    # Get the image from post request
+    try:
+        if 'file' not in request.files:
+            return "Please try again. The Image doesn't exist"
+        image = request.files.get('file')
+        basepath = os.path.dirname(__file__)
+        file_path = os.path.join(basepath, 'uploads', secure_filename(image.filename))
+        image.save(file_path)
+
+        predictions = getResult(file_path)
+        predicted_label = labels[np.argmax(predictions)]
+        return jsonify({'prediction': predicted_label})
+    except:
+        return jsonify({'Error': 'Error occur'})
+
+
+
 
 @app.route('/predict', methods=['POST'])
 def upload():
